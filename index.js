@@ -14,7 +14,7 @@ class ServiceManager {
     winston.cli();
     let logger = new winston.Logger({
       transports: [
-        new(winston.transports.Console)({
+        new (winston.transports.Console)({
           handleExceptions: true,
           colorize: true
         })
@@ -23,22 +23,25 @@ class ServiceManager {
     logger.cli();
   }
 
-  _createService({ name, path, enabled, config }, cb) {
+  _createService({name, path, enabled, config}, baseDir, cb) {
     if (enabled === true) {
+      if (path.indexOf('@') > -1) {
+        path = path.replace('@', baseDir);
+      }
       this._services[name] = require(path);
       this._services[name].configure(config, cb);
       winston.info(name + ' configured.');
     }
   }
 
-  _configure(config) {
+  _configure(config, baseDir) {
     return new Promise((resolve, reject) => {
       try {
         let done = _.after(config.services.length, function () {
           resolve();
         });
         _.each(config.services, (serviceCfg) => {
-          this._createService(serviceCfg, done);
+          this._createService(serviceCfg, baseDir, done);
         });
       } catch (e) {
         reject(e);
@@ -62,14 +65,18 @@ class ServiceManager {
     });
   }
 
-  start({ config }) {
-    return this._configure(config)
+  start({config, baseDir}) {
+    return this._configure(config, baseDir)
       .then(() => {
         return this._initialize();
       })
       .then(() => {
         winston.info('Service initialization finished');
         return Promise.resolve();
+      })
+      .catch(err => {
+        winston.log('error', err);
+        return Promise.reject(err);
       });
   }
 

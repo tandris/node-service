@@ -19,5 +19,10 @@
   "bugs": {
     "url": "https://github.com/tandris/node-service/issues"
   },
-  "homepage": "https://github.com/tandris/node-service#readme"
+  "homepage": "https://github.com/tandris/node-service#readme",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "mongoose": "^4.11.10",
+    "winston": "^2.3.1"
+  }
 }

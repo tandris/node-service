@@ -6,4 +6,4 @@ class Service {
   init() {}
 }
 
-module.exports = BaseService;
+module.exports = Service;
