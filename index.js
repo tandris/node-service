@@ -4,11 +4,14 @@
 const _ = require('lodash');
 const winston = require('winston');
 const events = require('events');
+const nsq = require('nsqjs');
 
 class ServiceManager {
 
   constructor() {
     this._services = {};
+    this._nsqConfig = {};
+    this._nsqWriter = null;
     this._emitter = new events.EventEmitter();
     this._emitter.setMaxListeners(Number.MAX_VALUE);
     winston.cli();
@@ -65,8 +68,30 @@ class ServiceManager {
     });
   }
 
+  _initNsq() {
+    this._nsqWriter = new nsq.Writer(this._nsqConfig.host, this._nsqConfig.port);
+    return new Promise((resolve, reject) => {
+      this._nsqWriter.connect();
+      this._nsqWriter.on('ready', () => {
+        resolve();
+      });
+      this._nsqWriter.on('error', () => {
+        reject('NSQ connection error');
+      });
+      this._nsqWriter.on('closed', () => {
+        winston.info('NSQ writer closed.');
+      });
+    });
+  }
+
   start({config, baseDir}) {
-    return this._configure(config, baseDir)
+    // NSQ init
+    this._nsqConfig = config.nsq;
+
+    return this._initNsq()
+      .then(() => {
+        return this._configure(config, baseDir);
+      })
       .then(() => {
         return this._initialize(config);
       })
@@ -86,6 +111,28 @@ class ServiceManager {
 
   get emitter() {
     return this._emitter;
+  }
+
+  sendNsqMessage(topic, message) {
+    return new Promise((resolve, reject) => {
+      this._nsqWriter.publish(topic, message, err => {
+        if (err) {
+          reject(err);
+        }
+        resolve();
+      });
+    });
+  }
+
+  addNsqReader(topic, channel, onMessage) {
+    const reader = new nsq.Reader(topic, channel, {
+      lookupdHTTPAddresses: this._nsqConfig.lookupdHTTPAddresses
+    });
+    reader.connect();
+    reader.on('message', msg => {
+      onMessage(msg);
+      msg.finish();
+    });
   }
 }
 
