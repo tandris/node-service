@@ -49,14 +49,14 @@ class ServiceManager {
     });
   }
 
-  _initialize() {
+  _initialize(config) {
     return new Promise((resolve, reject) => {
       try {
         let done = _.after(config.services.length, function () {
           resolve();
         });
         _.each(config.services, (service) => {
-          this._services[service.name].init();
+          this._services[service.name].init(done);
           winston.info(service.name + ' initialized.');
         });
       } catch (e) {
@@ -68,7 +68,7 @@ class ServiceManager {
   start({config, baseDir}) {
     return this._configure(config, baseDir)
       .then(() => {
-        return this._initialize();
+        return this._initialize(config);
       })
       .then(() => {
         winston.info('Service initialization finished');

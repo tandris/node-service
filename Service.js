@@ -3,7 +3,9 @@ class Service {
     cb();
   }
 
-  init() {}
+  init(cb) {
+    cb();
+  }
 }
 
 module.exports = Service;
