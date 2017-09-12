@@ -1,6 +1,8 @@
 const Service = require('../Service');
 // const nems = require('nems');
+const winston = require('winston');
 const mongoose = require('mongoose');
+const conc = require('concordant')();
 
 class MongoDbService extends Service {
 
@@ -14,26 +16,34 @@ class MongoDbService extends Service {
     mongoose.Promise = global.Promise;
 
     this._config = config;
-    /* if (config.embedded === true) {
-      nems.distribute(config.version, '.', config.port, true, true)
-        .then(function (pid) {
-          console.log('MongoDb started.');
-          self._connection = mongoose.createConnection('mongodb://localhost/' + config.dbName, {
-            useMongoClient: true,
-            promiseLibrary: global.Promise
-          });
-        })
-        .catch((err) => {
-          console.log(err);
+
+    this._resolve(config.host)
+      .then(({host, port}) => {
+        winston.info('MongoDB connection. { url = ' + 'mongodb://' + host + ':' + port + '/' + config.dbName + ' }');
+        self._connection = mongoose.createConnection('mongodb://' + host + ':' + port + '/' + config.dbName, {
+          useMongoClient: true,
+          promiseLibrary: global.Promise
         });
-    } else { */
-    self._connection = mongoose.createConnection('mongodb://' + config.host + '/' + config.dbName, {
-      useMongoClient: true,
-      promiseLibrary: global.Promise
-    });
-    // }
-    self._connection.on('open', function () {
-      cb();
+        self._connection.on('open', function () {
+          cb();
+        });
+      });
+  }
+
+  init(cb) {
+    cb();
+  }
+
+  _resolve(host) {
+    return new Promise((resolve, reject) => {
+      conc.dns.resolve(host, function (err, result) {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          resolve(result[0]);
+        }
+      });
     });
   }
 

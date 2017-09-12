@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/tandris/node-service#readme",
   "dependencies": {
+    "concordant": "^1.0.4",
     "lodash": "^4.17.4",
     "mongoose": "^4.11.10",
     "nsqjs": "^0.9.0",
