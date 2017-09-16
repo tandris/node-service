@@ -85,16 +85,24 @@ class ServiceManager {
   }
 
   _resolve(host) {
-    return new Promise((resolve, reject) => {
-      conc.dns.resolve(host, function (err, result) {
-        if (err) {
-          winston.error('Failed to resolve host. { host = ' + host + ' }', err);
-          reject(err);
-        } else {
-          resolve(result[0]);
-        }
+    if (process.env[host] !== null) {
+      console.log('Env variable found = ' + process.env[host]);
+      return Promise.resolve({
+        host: process.env[host].split(':')[0],
+        port: process.env[host].split(':')[1],
       });
-    });
+    } else {
+      return new Promise((resolve, reject) => {
+        conc.dns.resolve(host, function (err, result) {
+          if (err) {
+            winston.error('Failed to resolve host. { host = ' + host + ' }', err);
+            reject(err);
+          } else {
+            resolve(result[0]);
+          }
+        });
+      });
+    }
   }
 
   _initNsq() {
