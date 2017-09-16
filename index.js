@@ -84,12 +84,14 @@ class ServiceManager {
     });
   }
 
-  _resolve(host) {
-    if (process.env[host] !== null) {
-      console.log('Env variable found = ' + process.env[host]);
+  _resolve(service, host) {
+    if (process.env[service + '_SERVICE_HOST'] && process.env[service + '_SERVICE_PORT']) {
+      let host = process.env[service + '_SERVICE_HOST'];
+      let port = process.env[service + '_SERVICE_PORT'];
+      console.log('Env variable found = ' + host);
       return Promise.resolve({
-        host: process.env[host].split(':')[0],
-        port: process.env[host].split(':')[1],
+        host: host,
+        port: port,
       });
     } else {
       return new Promise((resolve, reject) => {
@@ -107,7 +109,7 @@ class ServiceManager {
 
   _initNsq() {
     let self = this;
-    return this._resolve(this._nsqConfig.nsqd.host)
+    return this._resolve('NSQD', this._nsqConfig.nsqd.host)
       .then(({host, port}) => {
         winston.info('NSQ writer connection. { host = ' + host + '; port = ' + port + '}');
         this._nsqWriter = new nsq.Writer(host, port);
@@ -125,7 +127,7 @@ class ServiceManager {
         return Promise.resolve();
       })
       .then(() => {
-        return this._resolve(this._nsqConfig.nsqlookupd.host);
+        return this._resolve('NSQLOOKUPD', this._nsqConfig.nsqlookupd.host);
       })
       .then(({host, port}) => {
         winston.info('NSQ reader connection. { host = ' + host + '; port = ' + port + '}');
