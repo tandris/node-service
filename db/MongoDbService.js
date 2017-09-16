@@ -36,8 +36,8 @@ class MongoDbService extends Service {
 
   _resolve(host) {
     if (process.env['MONGO_SERVICE_HOST'] && process.env['MONGO_SERVICE_PORT']) {
-      let host = process.env[service + '_SERVICE_HOST'];
-      let port = process.env[service + '_SERVICE_PORT'];
+      let host = process.env['MONGO_SERVICE_HOST'];
+      let port = process.env['MONGO_SERVICE_PORT'];
       console.log('Env variable found = ' + host);
       return Promise.resolve({
         host: host,
