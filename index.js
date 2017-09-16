@@ -85,6 +85,7 @@ class ServiceManager {
   }
 
   _resolve(service, host) {
+    console.log('Resolving service host - ' + service);
     if (process.env[service + '_SERVICE_HOST'] && process.env[service + '_SERVICE_PORT']) {
       let host = process.env[service + '_SERVICE_HOST'];
       let port = process.env[service + '_SERVICE_PORT'];
