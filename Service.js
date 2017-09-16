@@ -1,6 +1,7 @@
 const nsqjs = require('nsqjs');
 const ServiceManager = require('./index');
 const conc = require('concordant')();
+const fetch = require('node-fetch');
 
 class Service {
   configure(config, cb) {
@@ -40,6 +41,16 @@ class Service {
         });
       });
     }
+  }
+
+  callService({name = null, host = null, url, data = {}}) {
+    this.resolve(name, host)
+      .then(({host, port}) => {
+        return fetch(url, data);
+      })
+      .then(res => {
+        return res.json();
+      });
   }
 }
 
