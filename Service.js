@@ -2,6 +2,8 @@ const nsqjs = require('nsqjs');
 const ServiceManager = require('./index');
 const conc = require('concordant')();
 const fetch = require('node-fetch');
+const qs = require('query-string');
+const winston = require('winston');
 
 class Service {
   configure(config, cb) {
@@ -24,7 +26,7 @@ class Service {
     if (process.env[service + '_SERVICE_HOST'] && process.env[service + '_SERVICE_PORT']) {
       let host = process.env[service + '_SERVICE_HOST'];
       let port = process.env[service + '_SERVICE_PORT'];
-      console.log('Resolve service from environment variable. { service = ' + service + '; host = ' + host + '; port = ' + port + ' }');
+      winston.log('debug', 'Resolve service from environment variable. { service = ' + service + '; host = ' + host + '; port = ' + port + ' }');
       return Promise.resolve({
         host: host,
         port: port,
@@ -43,10 +45,19 @@ class Service {
     }
   }
 
-  callService({name = null, host = null, url, data = {}}) {
-    this.resolve(name, host)
+  callService({name = null, host = null, url, data = {}, query = {}}) {
+    return this.resolve(name, host)
       .then(({host, port}) => {
-        return fetch(url, data);
+        let q = null;
+        if (query) {
+          q = qs.stringify(query);
+        }
+        let path = 'http://' + host + ':' + port + url;
+        if (q) {
+          path += '?' + q;
+        }
+        winston.log('debug', 'Call service. { path = ' + path + '}');
+        return fetch(path, data);
       })
       .then(res => {
         return res.json();
