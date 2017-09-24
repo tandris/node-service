@@ -55,6 +55,7 @@ class ServiceManager {
         path = path.replace('@', baseDir);
       }
       this._services[name] = require(path);
+      config.baseDir = baseDir;
       this._services[name].configure(config, cb);
       winston.info(name + ' configured.');
     }
@@ -84,7 +85,7 @@ class ServiceManager {
     });
   }
 
-  _initialize(config) {
+  _initialize(config, baseDir) {
     return new Promise((resolve, reject) => {
       try {
         let done = _.after(config.services.length, function () {
@@ -163,7 +164,8 @@ class ServiceManager {
   start({config, baseDir}) {
     this._config = config;
     // NSQ init
-    this._nsqConfig = config.nsq;
+    this._nsqConfig = config.nsq || {};
+    this._redisConfig = config.redis || {};
     winston.level = config.logLevel || 'info';
 
     return this._initNsq()
@@ -177,7 +179,7 @@ class ServiceManager {
       .then(() => {
         winston.info('Service configuration finished');
         winston.info('Service initialization started');
-        return this._initialize(config);
+        return this._initialize(config, baseDir);
       })
       .then(() => {
         winston.info('Service initialization finished');

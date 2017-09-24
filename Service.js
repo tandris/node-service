@@ -7,6 +7,7 @@ const winston = require('winston');
 
 class Service {
   configure(config, cb) {
+    this._cacheEnabled = config.cacheEnabled === undefined ? true : config.cacheEnabled;
     cb();
   }
 
@@ -66,17 +67,65 @@ class Service {
 
   setCache({key, data, expiration = null}) {
     return new Promise((resolve, reject) => {
-      if (expiration) {
-        ServiceManager.redis.set(key, data, 'EX', expiration);
+      if (this._cacheEnabled === true) {
+        try {
+          if (expiration) {
+            ServiceManager.redis.set(key, JSON.stringify(data), 'EX', expiration);
+          } else {
+            console.log('SET');
+            ServiceManager.redis.set(key, JSON.stringify(data));
+            resolve(data);
+          }
+        } catch (e) {
+          reject(e);
+        }
       } else {
-        ServiceManager.redis.set(key, data);
+        winston.log('warn', 'Caching is disabled.');
+        resolve(data);
       }
     });
   }
 
   getCache(key) {
     return new Promise((resolve, reject) => {
-      ServiceManager.redis.get(key, (err, reply) => {
+      if (this._cacheEnabled === true) {
+        ServiceManager.redis.get(key, (err, reply) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(reply ? JSON.parse(reply) : null);
+          }
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  }
+
+  getCacheOrStore(key, expiration, provider) {
+    return this.getCache(key)
+      .then((result) => {
+        if (result) {
+          return Promise.resolve(result);
+        } else {
+          return provider()
+            .then((data) => {
+              return this.setCache(({
+                key: key,
+                data: data,
+                expiration: expiration
+              }));
+            });
+        }
+      })
+      .catch(e => {
+        winston.log('error', 'Failed to cache content.', e);
+      });
+  }
+
+  expireCache(key) {
+    return new Promise((resolve, reject) => {
+      ServiceManager.redis.del(key, (err, reply) => {
         if (err) {
           reject(err);
         } else {
@@ -86,9 +135,19 @@ class Service {
     });
   }
 
-  expireCache(key) {
+  expireCaches(prefix) {
+    return this.getCacheKeys()
+      .then(keys => {
+        _.each(keys, key => {
+          ServiceManager.redis.del(key);
+        });
+        return Promise.serolve();
+      });
+  }
+
+  getCacheKeys(service) {
     return new Promise((resolve, reject) => {
-      ServiceManager.redis.del(key, (err, reply) => {
+      ServiceManager.redis.keys(service + '*', (err, reply) => {
         if (err) {
           reject(err);
         } else {
