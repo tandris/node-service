@@ -5,6 +5,7 @@ const _ = require('lodash');
 const winston = require('winston');
 const events = require('events');
 const nsq = require('nsqjs');
+const redis = require('redis');
 const conc = require('concordant')();
 
 class ServiceManager {
@@ -14,6 +15,7 @@ class ServiceManager {
     this._services = {};
     this._nsqConfig = {};
     this._nsqWriter = null;
+    this._redis = null;
     this._lookupdHTTPAddresses = null;
     this._emitter = new events.EventEmitter();
     this._emitter.setMaxListeners(Number.MAX_VALUE);
@@ -34,6 +36,19 @@ class ServiceManager {
     winston.level = logLevel || 'info';
   };
 
+  _initRedis() {
+    let self = this;
+    return this._resolve('REDIS', this._redisConfig.host)
+      .then(({host, port}) => {
+        winston.info('redis writer connection. { host = ' + host + '; port = ' + port + '}');
+        self._redis = redis.createClient({
+          host: host,
+          port: port
+        });
+        return Promise.resolve();
+      });
+  }
+
   _createService({name, path, enabled, config}, baseDir, cb) {
     if (enabled === true) {
       if (path.indexOf('@') > -1) {
@@ -52,11 +67,16 @@ class ServiceManager {
           resolve();
         });
         _.each(config.services, (serviceCfg) => {
-          winston.log('debug', 'Configure service. { name = ' + serviceCfg.name + ' }');
-          this._createService(serviceCfg, baseDir, () => {
-            winston.log('debug', 'Configure service done. { name = ' + serviceCfg.name + ' }');
+          if (serviceCfg.enabled === true) {
+            winston.log('debug', 'Configure service. { name = ' + serviceCfg.name + ' }');
+            this._createService(serviceCfg, baseDir, () => {
+              winston.log('debug', 'Configure service done. { name = ' + serviceCfg.name + ' }');
+              done();
+            });
+          } else {
+            winston.log('debug', 'Skip service configuration beacuse it is disabled. { name = ' + serviceCfg.name + ' }');
             done();
-          });
+          }
         });
       } catch (e) {
         reject(e);
@@ -71,12 +91,17 @@ class ServiceManager {
           resolve();
         });
         _.each(config.services, (service) => {
-          winston.log('debug', 'Initialize service. { name = ' + service.name + ' }');
-          this._services[service.name].init(() => {
-            winston.log('debug', 'Initialize service done. { name = ' + service.name + ' }');
+          if (service.enabled === true) {
+            winston.log('debug', 'Initialize service. { name = ' + service.name + ' }');
+            this._services[service.name].init(() => {
+              winston.log('debug', 'Initialize service done. { name = ' + service.name + ' }');
+              done();
+            });
+            winston.info(service.name + ' initialized.');
+          } else {
+            winston.log('debug', 'Skip service initialization beacuse it is disabled. { name = ' + service.name + ' }');
             done();
-          });
-          winston.info(service.name + ' initialized.');
+          }
         });
       } catch (e) {
         reject(e);
@@ -143,9 +168,15 @@ class ServiceManager {
 
     return this._initNsq()
       .then(() => {
+        this._initRedis();
+      })
+      .then(() => {
+        winston.info('Service configuration started');
         return this._configure(config, baseDir);
       })
       .then(() => {
+        winston.info('Service configuration finished');
+        winston.info('Service initialization started');
         return this._initialize(config);
       })
       .then(() => {
@@ -164,6 +195,10 @@ class ServiceManager {
 
   get emitter() {
     return this._emitter;
+  }
+
+  get redis() {
+    return this._redis;
   }
 
   sendNsqMessage(topic, message) {

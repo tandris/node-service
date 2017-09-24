@@ -63,6 +63,40 @@ class Service {
         return res.json();
       });
   }
+
+  setCache({key, data, expiration = null}) {
+    return new Promise((resolve, reject) => {
+      if (expiration) {
+        ServiceManager.redis.set(key, data, 'EX', expiration);
+      } else {
+        ServiceManager.redis.set(key, data);
+      }
+    });
+  }
+
+  getCache(key) {
+    return new Promise((resolve, reject) => {
+      ServiceManager.redis.get(key, (err, reply) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(reply);
+        }
+      });
+    });
+  }
+
+  expireCache(key) {
+    return new Promise((resolve, reject) => {
+      ServiceManager.redis.del(key, (err, reply) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(reply);
+        }
+      });
+    });
+  }
 }
 
 module.exports = Service;
