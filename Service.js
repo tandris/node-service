@@ -19,8 +19,12 @@ class Service {
     ServiceManager.addNsqReader(topic, channel, onMessage);
   }
 
-  sendMessage(topic, message) {
-    return ServiceManager.sendNsqMessage(topic, message);
+  sendMessage(topic, message, timeout) {
+    if(timeout) {
+      return ServiceManager.sendNsqMessageWithTimeou(topic, message, timeout);
+    } else {
+      return ServiceManager.sendNsqMessage(topic, message);
+    }
   }
 
   resolve(service, host) {

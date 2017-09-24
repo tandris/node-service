@@ -215,6 +215,18 @@ class ServiceManager {
     });
   }
 
+  sendNsqMessageWithTimeou(topic, message, timeout) {
+    return new Promise((resolve, reject) => {
+      this._nsqWriter.deferPublish(topic, message, timeout, err => {
+        if (err) {
+          winston.log('error', err);
+          reject(err);
+        }
+        resolve();
+      });
+    });
+  }
+
   addNsqReader(topic, channel, onMessage) {
     winston.log('debug', 'Add NSQ reader. { host = ' + this._lookupdHTTPAddresses + '; topic = ' + topic + '; channel = ' + channel + '}');
     const reader = new nsq.Reader(topic, channel, {
