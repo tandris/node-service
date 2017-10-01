@@ -4,6 +4,7 @@ const conc = require('concordant')();
 const fetch = require('node-fetch');
 const qs = require('query-string');
 const winston = require('winston');
+const _ = require('lodash');
 
 class Service {
   configure(config, cb) {
@@ -20,7 +21,7 @@ class Service {
   }
 
   sendMessage(topic, message, timeout) {
-    if(timeout) {
+    if (timeout) {
       return ServiceManager.sendNsqMessageWithTimeou(topic, message, timeout);
     } else {
       return ServiceManager.sendNsqMessage(topic, message);
@@ -76,7 +77,6 @@ class Service {
           if (expiration) {
             ServiceManager.redis.set(key, JSON.stringify(data), 'EX', expiration);
           } else {
-            console.log('SET');
             ServiceManager.redis.set(key, JSON.stringify(data));
             resolve(data);
           }
@@ -140,10 +140,15 @@ class Service {
   }
 
   expireCaches(prefix) {
-    return this.getCacheKeys()
+    return this.getCacheKeys(prefix)
       .then(keys => {
         _.each(keys, key => {
-          ServiceManager.redis.del(key);
+          winston.log('debug', 'Clear redis cache. { key = ' + key + ' }');
+          ServiceManager.redis.del(key, (err, reply) => {
+            if (err) {
+              winston.log('error', 'Failed to clear redis cache. { key = ' + key + ' }');
+            }
+          });
         });
         return Promise.serolve();
       });

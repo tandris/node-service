@@ -28,7 +28,8 @@ class ServiceManager {
       transports: [
         new (winston.transports.Console)({
           handleExceptions: true,
-          colorize: true
+          colorize: true,
+          'timestamp': true
         })
       ]
     });
