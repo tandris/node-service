@@ -150,7 +150,7 @@ class Service {
             }
           });
         });
-        return Promise.serolve();
+        return Promise.resolve();
       });
   }
 
