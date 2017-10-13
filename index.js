@@ -8,6 +8,8 @@ const nsq = require('nsqjs');
 const redis = require('redis');
 const conc = require('concordant')();
 
+const tsFormat = () => ( new Date() ).toLocaleDateString() + ' - ' + ( new Date() ).toLocaleTimeString();
+
 class ServiceManager {
 
   constructor() {
@@ -29,7 +31,7 @@ class ServiceManager {
         new (winston.transports.Console)({
           handleExceptions: true,
           colorize: true,
-          'timestamp': true
+          timestamp: tsFormat
         })
       ]
     });
