@@ -1,3 +1,4 @@
+const ServiceManager = require('./index');
 /**
  * Serial promise execution.
  * @method PromiseSerial
@@ -10,6 +11,9 @@ const PromiseSerial = (promises) => {
     return promises[0]()
       .then(() => {
         return PromiseSerial(promises.slice(1));
+      })
+      .catch(e => {
+        ServiceManager.logger.error('Serial promise execution error.', e);
       });
   } else {
     return Promise.resolve();
