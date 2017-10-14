@@ -19,7 +19,7 @@ class MongoDbService extends Service {
 
     this.resolve('MONGO', config.host)
       .then(({host, port}) => {
-        winston.info('MongoDB connection. { url = ' + 'mongodb://' + host + ':' + port + '/' + config.dbName + ' }');
+        logger.info('MongoDB connection. { url = ' + 'mongodb://' + host + ':' + port + '/' + config.dbName + ' }');
         self._connection = mongoose.createConnection('mongodb://' + host + ':' + port + '/' + config.dbName, {
           useMongoClient: true,
           promiseLibrary: global.Promise

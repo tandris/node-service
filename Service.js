@@ -3,7 +3,6 @@ const ServiceManager = require('./index');
 const conc = require('concordant')();
 const fetch = require('node-fetch');
 const qs = require('query-string');
-const winston = require('winston');
 const _ = require('lodash');
 
 class Service {
@@ -32,7 +31,7 @@ class Service {
     if (process.env[service + '_SERVICE_HOST'] && process.env[service + '_SERVICE_PORT']) {
       let host = process.env[service + '_SERVICE_HOST'];
       let port = process.env[service + '_SERVICE_PORT'];
-      winston.log('debug', 'Resolve service from environment variable. { service = ' + service + '; host = ' + host + '; port = ' + port + ' }');
+      this.logger.log('debug', 'Resolve service from environment variable. { service = ' + service + '; host = ' + host + '; port = ' + port + ' }');
       return Promise.resolve({
         host: host,
         port: port,
@@ -41,7 +40,7 @@ class Service {
       return new Promise((resolve, reject) => {
         conc.dns.resolve(host, function (err, result) {
           if (err) {
-            winston.error('Failed to resolve host. { host = ' + host + ' }', err);
+            this.logger.error('Failed to resolve host. { host = ' + host + ' }', err);
             reject(err);
           } else {
             resolve(result[0]);
@@ -62,7 +61,7 @@ class Service {
         if (q) {
           path += '?' + q;
         }
-        winston.log('debug', 'Call service. { path = ' + path + '}');
+        this.logger.log('debug', 'Call service. { path = ' + path + '}');
         return fetch(path, data);
       })
       .then(res => {
@@ -84,7 +83,7 @@ class Service {
           reject(e);
         }
       } else {
-        winston.log('warn', 'Caching is disabled.');
+        this.logger.log('warn', 'Caching is disabled.');
         resolve(data);
       }
     });
@@ -123,7 +122,7 @@ class Service {
         }
       })
       .catch(e => {
-        winston.log('error', 'Failed to cache content.', e);
+        this.logger.log('error', 'Failed to cache content.', e);
       });
   }
 
@@ -143,10 +142,10 @@ class Service {
     return this.getCacheKeys(prefix)
       .then(keys => {
         _.each(keys, key => {
-          winston.log('debug', 'Clear redis cache. { key = ' + key + ' }');
+          this.logger.log('debug', 'Clear redis cache. { key = ' + key + ' }');
           ServiceManager.redis.del(key, (err, reply) => {
             if (err) {
-              winston.log('error', 'Failed to clear redis cache. { key = ' + key + ' }');
+              this.logger.log('error', 'Failed to clear redis cache. { key = ' + key + ' }');
             }
           });
         });
@@ -164,6 +163,10 @@ class Service {
         }
       });
     });
+  }
+
+  get logger() {
+    return ServiceManager.logger;
   }
 }
 

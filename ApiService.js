@@ -1,7 +1,6 @@
 const restify = require('restify');
 const restifySwaggerJsdoc = require('restify-swagger-jsdoc');
 const Service = require('./Service');
-const winston = require('winston');
 
 class ApiService extends Service {
 
@@ -28,7 +27,7 @@ class ApiService extends Service {
     });
 
     server.listen(this.port, function () {
-      winston.log('info', '%s listening at %s', server.name, server.url);
+      logger.log('info', '%s listening at %s', server.name, server.url);
       cb();
     });
   }
