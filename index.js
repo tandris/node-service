@@ -29,8 +29,7 @@ class ServiceManager {
         new(winston.transports.Console)({
           handleExceptions: true,
           colorize: true,
-          json: false,
-          timestamp: true,
+          timestamp: true
         })
       ]
     });

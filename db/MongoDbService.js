@@ -18,8 +18,8 @@ class MongoDbService extends Service {
     this._config = config;
 
     this.resolve('MONGO', config.host)
-      .then(({host, port}) => {
-        logger.info('MongoDB connection. { url = ' + 'mongodb://' + host + ':' + port + '/' + config.dbName + ' }');
+      .then(({ host, port }) => {
+        this.logger.info('MongoDB connection. { url = ' + 'mongodb://' + host + ':' + port + '/' + config.dbName + ' }');
         self._connection = mongoose.createConnection('mongodb://' + host + ':' + port + '/' + config.dbName, {
           useMongoClient: true,
           promiseLibrary: global.Promise
@@ -27,6 +27,9 @@ class MongoDbService extends Service {
         self._connection.on('open', function () {
           cb();
         });
+      })
+      .catch(e => {
+        this.logger.log('error', 'Failed to initialize mongoDB connection.', e)
       });
   }
 

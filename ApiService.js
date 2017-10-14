@@ -27,7 +27,7 @@ class ApiService extends Service {
     });
 
     server.listen(this.port, function () {
-      logger.log('info', '%s listening at %s', server.name, server.url);
+      self.logger.log('info', '%s listening at %s', server.name, server.url);
       cb();
     });
   }
