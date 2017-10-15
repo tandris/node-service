@@ -2,13 +2,20 @@ const ServiceManager = require('./index');
 /**
  * Serial promise execution.
  * @method PromiseSerial
- * @param  {[type]}      promises array of promises
+ * @param  {[Function]}      promises array of promises
+ * @param {Number}           timeout period 
  *
  * @return empty Promise
  */
-const PromiseSerial = (promises) => {
+const PromiseSerial = (promises, timeout) => {
   if (promises.length > 0) {
-    return promises[0]()
+    return Promise
+      .race([promises[0](), new Promise(resolve, reject) => {
+        setTimeout(() => {
+          ServiceManager.logger.error('Promise has timed out.', e);
+          resolve();
+        }, timeout || 5000);
+      }])
       .then(() => {
         return PromiseSerial(promises.slice(1));
       })
