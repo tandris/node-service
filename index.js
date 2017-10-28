@@ -210,7 +210,7 @@ class ServiceManager {
 
   sendNsqMessage(topic, message) {
     return new Promise((resolve, reject) => {
-      this._nsqWriter.publish(topic.toLowerCase(), message.toLowerCase(), err => {
+      this._nsqWriter.publish(topic.toLowerCase(), message, err => {
         if (err) {
           this.logger.log('error', err);
           reject(err);
@@ -222,7 +222,7 @@ class ServiceManager {
 
   sendNsqMessageWithTimeout(topic, message, timeout) {
     return new Promise((resolve, reject) => {
-      this._nsqWriter.deferPublish(topic.toLowerCase(), message.toLowerCase(), timeout, err => {
+      this._nsqWriter.deferPublish(topic.toLowerCase(), message, timeout, err => {
         if (err) {
           this.logger.log('error', err);
           reject(err);
