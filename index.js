@@ -162,7 +162,7 @@ class ServiceManager {
       })
       .then(({ host, port }) => {
         this.logger.info('NSQ reader connection. { host = ' + host + '; port = ' + port + '}');
-        this._lookupdHTTPAddresses = host + ':' + (port + 1);
+        this._lookupdHTTPAddresses = host + ':' + (parseInt(port) + 1);
       });
   }
 
