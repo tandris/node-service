@@ -21,7 +21,7 @@ class Service {
 
   sendMessage(topic, message, timeout) {
     if (timeout) {
-      return ServiceManager.sendNsqMessageWithTimeou(topic, message, timeout);
+      return ServiceManager.sendNsqMessageWithTimeout(topic, message, timeout);
     } else {
       return ServiceManager.sendNsqMessage(topic, message);
     }

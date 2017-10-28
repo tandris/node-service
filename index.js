@@ -210,7 +210,7 @@ class ServiceManager {
 
   sendNsqMessage(topic, message) {
     return new Promise((resolve, reject) => {
-      this._nsqWriter.publish(topic, message, err => {
+      this._nsqWriter.publish(topic.toLowerCase(), message.toLowerCase(), err => {
         if (err) {
           this.logger.log('error', err);
           reject(err);
@@ -220,9 +220,9 @@ class ServiceManager {
     });
   }
 
-  sendNsqMessageWithTimeou(topic, message, timeout) {
+  sendNsqMessageWithTimeout(topic, message, timeout) {
     return new Promise((resolve, reject) => {
-      this._nsqWriter.deferPublish(topic, message, timeout, err => {
+      this._nsqWriter.deferPublish(topic.toLowerCase(), message.toLowerCase(), timeout, err => {
         if (err) {
           this.logger.log('error', err);
           reject(err);
@@ -234,8 +234,8 @@ class ServiceManager {
 
   addNsqReader(topic, channel, onMessage) {
     this.logger.log('debug', 'Add NSQ reader. { host = ' + this._lookupdHTTPAddresses + '; topic = ' + topic + '; channel = ' + channel + '}');
-    const reader = new nsq.Reader(topic, channel, {
-      lookupdHTTPAddresses: '127.0.0.1:4161'
+    const reader = new nsq.Reader(topic.toLowerCase(), channel.toLowerCase(), {
+      lookupdHTTPAddresses: this._lookupdHTTPAddresses
     });
     reader.on('ready', () => {
       this.logger.log('debug', 'NSQ reader connected.');
