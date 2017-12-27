@@ -42,6 +42,10 @@ class ServiceManager {
   }
 
   _initRedis() {
+    if(this._config.redis.enabled === false) {
+      this.logger.info('redis is disabled');
+      return Promise.resolve();
+    }
     let self = this;
     return this._resolve('REDIS', this._redisConfig.host)
       .then(({ host, port }) => {
@@ -139,6 +143,10 @@ class ServiceManager {
   }
 
   _initNsq() {
+    if(this._config.nsq.enabled === false) {
+      this.logger.info('NSQ is disabled');
+      return Promise.resolve();
+    }
     let self = this;
     return this._resolve('NSQD', this._nsqConfig.nsqd.host)
       .then(({ host, port }) => {
@@ -175,7 +183,7 @@ class ServiceManager {
 
     return this._initNsq()
       .then(() => {
-        this._initRedis();
+        return this._initRedis();
       })
       .then(() => {
         this.logger.info('Service configuration started');
