@@ -6,6 +6,7 @@ class ApiService extends Service {
 
   configure(config, cb) {
     this.port = config.port ? parseInt(process.env[config.port]) : 3000;
+    this.host = config.host;
     this.baseDir = config.baseDir;
     super.configure(config, cb);
   }
@@ -25,11 +26,18 @@ class ApiService extends Service {
       path: '/docs/swagger', // Public url where the swagger page will be available
       apis: [this.baseDir + '/**/*Api.js'], // Path to the API docs
     });
-
-    server.listen(this.port, function () {
-      self.logger.log('info', '%s listening at %s', server.name, server.url);
-      cb();
-    });
+    if(this.host) {
+      server.listen(this.port, this.host, function () {
+        self.logger.log('info', '%s listening at %s', server.name, server.url);
+        cb();
+      });
+    } else {
+      server.listen(this.port, function () {
+        self.logger.log('info', '%s listening at %s', server.name, server.url);
+        cb();
+      });
+    }
+    
   }
 
   initRoutes(server) {
