@@ -120,6 +120,7 @@ class ServiceManager {
   }
 
   _resolve(service, host) {
+    let self = this;
     if (process.env[service + '_SERVICE_HOST'] && process.env[service + '_SERVICE_PORT']) {
       let host = process.env[service + '_SERVICE_HOST'];
       let port = process.env[service + '_SERVICE_PORT'];
@@ -132,7 +133,7 @@ class ServiceManager {
       return new Promise((resolve, reject) => {
         conc.dns.resolve(host, function (err, result) {
           if (err) {
-            this.logger.error('Failed to resolve host. { host = ' + host + ' }', err);
+            self.logger.error('Failed to resolve host. { host = ' + host + ' }', err);
             reject(err);
           } else {
             resolve(result[0]);
