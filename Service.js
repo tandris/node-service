@@ -105,6 +105,22 @@ class Service {
     });
   }
 
+  getKeys(pattern) {
+    return new Promise((resolve, reject) => {
+      if (this._cacheEnabled === true) {
+        ServiceManager.redis.keys(pattern, (err, reply) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(reply);
+          }
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  }
+  
   getCacheOrStore(key, expiration, provider) {
     return this.getCache(key)
       .then((result) => {
